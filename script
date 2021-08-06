@@ -1,45 +1,38 @@
-#!/bin/bash -v
+#!/bin/bash
 
+#goal: calculate score matrix for multiple genomic location files 
 #activate the environment with Deeptools
 source /zfs/omics/software/v_envs/madpy3/bin/activate
 
-#calculate the matrices
-# for the TSS
-computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
--S ~/personal/NGS/ChIP_ZNF91_NH/hg19/ZNF91GFP_rep2_20180128.bw \
--R ~/personal/data/TSS/TSS_plusmin1kb_hg19.bed \
---missingDataAsZero \
--o ~/personal/results/matrix/ZNF91_TSS.gz \
--p 8 #number of processors used
+# score file
 
-# for SVAs
-computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
--S ~/personal/NGS/ChIP_ZNF91_NH/hg19/ZNF91GFP_rep2_20180128.bw \
--R ~/personal/data/TE/SVA/hg19/SVA_cleanedup_human_hg19.bed \
---missingDataAsZero \
--o ~/personal/results/matrix/ZNF91_SVA.gz \
--p 8 #number of processors used
+# location files
 
-# G4 coverage at ZNF91 and ZNF565 (PDS only)
-computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
--S ~/personal/data/G4/G4seq/hg19/G4_PDS_minus_hg19.bw \
--R ~/personal/data/ZNF/ZNF91/hg19/ZNF91_top1000_hg19.bed ~/personal/data/ZNF/ZNF565/hg19/ZNF565_top1000_hg19.bed \
---missingDataAsZero \
--o ~/personal/results/matrix/G4seq_PDS_ZNF91_ZNF565_hg19.gz \
--p 8 #number of processors used
+#calculate the matrices forward 
+for i in ~/personal/data/TE/hg19.bed
+do	
+	computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
+	-S ~/personal/data/G4/G4seq/hg19/G4_PDS_minus_hg19.bw \
+	-R ${i} \
+	--missingDataAsZero \
+	-o ~/personal/results/matrix/${i%.bed}G4seq_plus.gz \
+	-p 8 #number of processors used
+	
 
-# G4 coverage at ZNF91/565 peaks (SVAs filtered out)
-computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
--S ~/personal/data/G4/G4seq/hg19/G4_PDS_minus_hg19.bw \
--R ~/personal/data/ZNF/ZNF91/hg19/ZNF91_noSVA_t1000_hg19.bed ~/personal/data/ZNF/ZNF565/hg19/ZNF565_top1000_hg19.bed \
---missingDataAsZero \
--o ~/personal/results/matrix/G4seq_PDS_ZNF91_ZNF565_noSVA_hg19.gz \
--p 8 #number of processors used
+#calculate the matrices reverse 
+for i in ~/personal/data/TE/hg19.bed
+do	
+	computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
+	-S ~/personal/data/G4/G4seq/hg19/G4_PDS_plus_hg19.bw \
+	-R ${i} \
+	--missingDataAsZero \
+	-o ~/personal/results/matrix/${i%.bed}G4seq_minus.gz \
+	-p 8 #number of processors used
 
 # plot heatmaps from all matrices using the same settings 
 for i in ~/personal/results/matrix/*.gz
 do
-	plotHeatmap -m ${i} -out ${i%.gz}.png	--colorMap gist_yarg --refPointLabel center	--legendLocation none	--heatmapWidth 8 --heatmapHeight 10	--yMin 0
+	plotHeatmap -m ${i} -out ${i%.gz}.png --colorMap gist_yarg --refPointLabel center --legendLocation none	--heatmapWidth 8 --heatmapHeight 10 --yMin 0
 
 	mv ~/personal/results/matrix/*.png ~/personal/results/plots 
 done
