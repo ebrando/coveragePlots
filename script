@@ -8,8 +8,12 @@ source /zfs/omics/software/v_envs/madpy3/bin/activate
 
 # location files
 
+
+## navigate to folder with location files
+cd /path/to/bed
+
 #calculate the matrices forward 
-for i in ~/personal/data/TE/hg19.bed
+for i in *hg19.bed
 do	
 	computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
 	-S ~/personal/data/G4/G4seq/hg19/G4_PDS_minus_hg19.bw \
@@ -17,10 +21,11 @@ do
 	--missingDataAsZero \
 	-o ~/personal/results/matrix/${i%.bed}G4seq_plus.gz \
 	-p 8 #number of processors used
+done
 	
 
 #calculate the matrices reverse 
-for i in ~/personal/data/TE/hg19.bed
+for i in *hg19.bed
 do	
 	computeMatrix reference-point --referencePoint center -a 2000 -b 2000 \
 	-S ~/personal/data/G4/G4seq/hg19/G4_PDS_plus_hg19.bw \
